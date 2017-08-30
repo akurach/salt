@@ -1202,6 +1202,27 @@ def _format_instance_info(vm):
     return vm_full_info
 
 
+def _format_guestid_info_select(vm, selection):
+    vm_select_info = {}
+
+    if 'id' in selection:
+        vm_select_info['id'] = vm["name"]
+
+    if 'guest_id' in selection:
+        vm_select_info['guest_id'] = vm["config.guestId"] if "config.guestId" in vm else "N/A"
+
+    return vm_select_info
+
+
+def _format_guestid_info(vm):
+
+    vm_full_info = {
+        'guest_id': str(vm["config.guestId"]) if "config.guestId" in vm else "N/A",
+    }
+
+    return vm_full_info
+
+
 def _get_snapshots(snapshot_list, current_snapshot=None, parent_snapshot_path=""):
     snapshots = {}
     for snapshot in snapshot_list:
@@ -1779,6 +1800,31 @@ def show_instance(name, call=None):
     for vm in vm_list:
         if vm['name'] == name:
             return _format_instance_info(vm)
+
+
+def show_guestid(name, call=None):
+    '''
+        List guestid of the specified VM
+        CLI Example:
+        .. code-block:: bash
+            salt-cloud -a show_guestid vmname
+        '''
+    if call != 'action':
+        raise SaltCloudSystemExit(
+            'The show_guestid action must be called wit '
+            '-a or --action'
+        )
+
+    vm_properties = [
+        "name",
+        "config.guestId"
+    ]
+
+    vm_list = salt.utils.vmware.get_mors_with_properties(_get_si(), vim.VirtualMachine, vm_properties)
+
+    for vm in vm_list:
+        if vm['name'] == name:
+            return _format_guestid_info(vm)
 
 
 def avail_images(call=None):
